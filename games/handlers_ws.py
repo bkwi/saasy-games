@@ -36,12 +36,12 @@ async def waiting_room(request: web.Request) -> web.WebSocketResponse:
     task = request.app.loop.create_task(
         redis_subscription(ws, request.app["redis"], f"waiting_room:{game_id}")
     )
-
     try:
         async for msg in ws:
             pass
     finally:
         task.cancel()
+        await request.app["redis"].hdel("games_pending", game_id)
 
     return ws
 
@@ -77,6 +77,13 @@ async def game_room(request: web.Request) -> web.WebSocketResponse:
                         }
                     },
                 )
+                if game.winner:
+                    winner_id = game.winner["id"]
+                    users_col = request.app["db"].users
+                    await users_col.update_one(
+                        {"_id": ObjectId(winner_id)}, {"$inc": {"games_won": 1}}
+                    )
+
                 msg = {
                     "type": "update_state",
                     "state": game.state,

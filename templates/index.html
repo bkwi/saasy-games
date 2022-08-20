@@ -30,7 +30,7 @@
 
           <div class="columns">
             <div class="column is-4 is-offset-2">
-              Total games played: XXX
+              Total games played: {{ gameStats.total_games_played }}
             </div>
             <div class="column is-4">
               Games ongoing: XXX
@@ -39,7 +39,10 @@
 
           <div class="columns" v-if="user">
             <div class="column is-4 is-offset-2">
-              You played XXX games so far
+              You played {{ gameStats.user_games_played }} games so far
+            </div>
+            <div class="column is-4">
+              You won {{ gameStats.user_games_won }} games so far
             </div>
           </div>
           <div class="columns" v-else>
@@ -58,13 +61,13 @@
             <div class="column is-6 is-offset-3 box">
 
               Start a new game
-              <select v-model="gameTypeSelected">
-                <option v-for="game in gamesAvailable" :value="game.type">
+              <select v-model="gameSelected.codename">
+                <option v-for="game in gamesAvailable" :value="game.codename">
                   {{ game.name }}
                 </option>
               </select>
               and play against
-              <select v-model="opponentTypeSelected">
+              <select v-model="opponentSelected.type">
                 <option v-for="opponent in opponentsAvailable" :value="opponent.type">
                   {{ opponent.name }}
                 </option>
@@ -96,7 +99,7 @@
                 </tr>
                 <tr v-for="game in visiblePendingGames">
                   <td>{{ game.host_username }}</td>
-                  <td>{{ game.game_type }}</td>
+                  <td>{{ game.game.name }}</td>
                   <td @click="joinGame(game.game_id)">JOIN</td>
                 </tr>
               </table>

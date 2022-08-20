@@ -4,17 +4,19 @@ const app = new Vue({
   data: {
     user: null,
     gamesAvailable: [
-      {name: "Tic Tac Toe", type: 1},
-      {name: "Cards", type: 2},
+      {name: "Tic Tac Toe", codename: "tictactoe"},
+      {name: "Cards", codename: "cards"},
     ],
-    gameTypeSelected: 1,
+    gameSelected: {name: "Tic Tac Toe", codename: "tictactoe"},
     opponentsAvailable: [
       {name: "another human", type: "human"},
       {name: "a computer", type: "cpu"},
+
     ],
-    opponentTypeSelected: "human",
+    opponentSelected: {name: "another human", type: "human"},
     ws: null,
     pendingGames: [],
+    gameStats: {}
   },
 
   computed: {
@@ -24,10 +26,16 @@ const app = new Vue({
   },
 
   mounted: function (e) {
-    this.ws = new WebSocket(`ws://localhost:8000/ws`);
+    this.ws = new WebSocket(`ws://${window.location.host}/ws`);
     this.$http.get("/api/user").then(response => {
       this.user = response.body.user;
       this.getPendingGames();
+    }, response => {
+      // err
+    })
+
+    this.$http.get("/api/stats").then(response => {
+      this.gameStats = response.body;
     }, response => {
       // err
     })
@@ -37,11 +45,11 @@ const app = new Vue({
 
     startNewGame: function () {
       let body = {
-        game_type: this.gameTypeSelected,
-        opponent_type: this.opponentTypeSelected,
+        game: this.gameSelected,
+        opponent: this.opponentSelected,
       };
       this.$http.post("/api/new-game", body).then(response => {
-        window.location.replace(`/waiting-room/${response.body.waiting_room_id}`);
+        window.location.replace(response.body.redirect_url);
       }, response => {
         // err
       })

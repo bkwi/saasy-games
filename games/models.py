@@ -1,3 +1,5 @@
+import random
+
 from bson import ObjectId
 from pydantic import BaseModel, Field
 
@@ -22,8 +24,8 @@ class User(BaseModel):
 
 class Game(BaseModel):
     id: ObjectId = Field(default_factory=ObjectId, alias="_id")
-    players: list[dict]
-    next_player: dict
+    players: list[dict] = []
+    next_player: dict = None
     code_name: str = ""
     display_name: str = ""
     state: dict = {}
@@ -31,6 +33,9 @@ class Game(BaseModel):
 
     class Config:
         arbitrary_types_allowed = True
+
+    def start(self, players: list):
+        raise NotImplementedError
 
 
 class TicTacToeGame(Game):
@@ -46,11 +51,35 @@ class TicTacToeGame(Game):
     def db_dict(self):
         return self.dict(by_alias=True)
 
+    def start(self, players: list[dict]):
+        chars = ["X", "O"]
+        random.shuffle(players)
+        players[0]["char"] = chars.pop()
+        players[1]["char"] = chars.pop()
+        self.players = players
+        self.next_player = players[0]
+
+        if self.next_player["id"] == "cpu":
+            self.make_cpu_move()
+
+    def make_cpu_move(self):
+        available_cells = []
+        for x, row in enumerate(self.state["board"]):
+            for y, cell in enumerate(row):
+                if cell == "":
+                    available_cells.append({"x": x, "y": y})
+
+        move = random.choice(available_cells)
+        return self.apply_move("cpu", move)
+
     def apply_move(self, player_id, move):
         if self.next_player["id"] != player_id:
             return False
 
         x, y = move["x"], move["y"]
+        if self.state["board"][x][y] != "":
+            return False
+
         self.state["board"][x][y] = self.next_player["char"]
 
         for player in self.players:
@@ -61,13 +90,15 @@ class TicTacToeGame(Game):
             for player in self.players:
                 if winning_char == player["char"]:
                     self.winner = player
+                    return True
+
+        if self.next_player["id"] == "cpu":
+            return self.make_cpu_move()
 
         return True
 
     def check_winner(self):
         board = self.state["board"]
-        for row in board:
-            print(row)
 
         # check rows
         for row in board:
@@ -90,3 +121,7 @@ class TicTacToeGame(Game):
                 return diag[0]
 
         return None
+
+
+GAME_TYPES = {"tictactoe": TicTacToeGame}
+TicTacToeGame(_id=ObjectId())

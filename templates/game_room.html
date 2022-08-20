@@ -13,11 +13,11 @@
 
       <div id="app" class="hero-body">
         <div class="container">
-          <div class="column is-4 is-offset-4">
-            <p>
-            </p>
+          <div v-if="winner" class="column is-4 is-offset-4">
+            Winner: {{ winner.username }}
+          </div>
+          <div v-else class="column is-4 is-offset-4">
             Next move: {{ next.username }}
-
             <tictactoe v-bind:state="state" v-on:cell-clicked="move"></tictactoe>
           </div>
         </div>

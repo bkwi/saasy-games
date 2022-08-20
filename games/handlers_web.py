@@ -10,6 +10,11 @@ async def read_html(filename: str) -> str:
         return await html.read()
 
 
+@routes.get("/favicon.ico")
+async def favicon(request: web.Request) -> web.Response:
+    return web.Response()
+
+
 @routes.get("/")
 async def index(request: web.Request) -> web.Response:
     return web.Response(text=await read_html("index.html"), content_type="text/html")
@@ -34,19 +39,19 @@ async def register(request: web.Request) -> web.Response:
 
 @routes.get("/fanout")
 async def foo(request):
-    redis = request.app["redis"]
+    # redis = request.app["redis"]
     db = request.app["db"]
-    # await redis.publish(
+    # await .publish(
     #     "ttt",
     #     "game_ready"
     #     # "waiting_room:cabd0f8336b14b868992df226aa5509a", "hello everyone"
     # )
-
-    cur = db.games.find({})
-    async for item in cur:
-        print(item)
-
     # await db.games.drop()
+    cur = db.users.find({})
+    async for u in cur:
+        print(u)
+
+    # await db.users.update({})
     return web.Response(text="HEY")
 
 

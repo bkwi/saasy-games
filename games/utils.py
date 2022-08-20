@@ -27,7 +27,6 @@ async def redis_subscription(websocket, redis, channel_name: str):
     try:
         await pubsub.subscribe(channel_name)
         async for msg in pubsub.listen():
-            print("IN PUB LISTEN", msg)
             await websocket.send_str(msg.get("data"))
     finally:
         await pubsub.unsubscribe(channel_name)

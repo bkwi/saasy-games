@@ -3,7 +3,7 @@ const app = new Vue({
 
   mounted: function (e) {
     let gameId = window.location.pathname.split("/").slice(-1).pop();
-    let ws = new WebSocket(`ws://localhost:8000/ws/waiting-room/${gameId}`);
+    let ws = new WebSocket(`ws://${window.location.host}/ws/waiting-room/${gameId}`);
 
     ws.onmessage = (event) => {
       if (event.data === "game_ready") {

@@ -1,14 +1,13 @@
 import hashlib
 import json
 import os
-import random
 import secrets
 
 from aiohttp import web
 from aiohttp_session import get_session, new_session
 from bson import ObjectId
 
-from games.models import TicTacToeGame, User
+from games.models import GAME_TYPES, TicTacToeGame, User
 from games.utils import login_required
 
 routes = web.RouteTableDef()
@@ -73,16 +72,39 @@ async def create_new_game(request: web.Request) -> web.Response:
     data = await request.json()
     user = request["user"]
     game_id = str(ObjectId())
-    game = {
+
+    if data["opponent"]["type"] == "cpu":
+        game_class = GAME_TYPES[data["game"]["codename"]]
+        game = game_class(_id=ObjectId(game_id))
+        game.start(
+            players=[
+                {
+                    "id": str(user.id),
+                    "username": user.username,
+                },
+                {
+                    "id": "cpu",
+                    "username": "Computer",
+                },
+            ]
+        )
+        games_col = request.app["db"].games
+        await games_col.insert_one(game.db_dict())
+        users_col = request.app["db"].users
+        await users_col.update_one({"_id": user.id}, {"$inc": {"games_played": 1}})
+        return web.json_response({"redirect_url": f"/game-room/{game_id}"})
+
+    pending_game = {
         "game_id": game_id,
+        "game": data["game"],
         "host_id": str(user.id),
         "host_username": user.username,
-        "game_type": data["game_type"],
-        "opponent_type": data["opponent_type"],
+        "opponent": data["opponent"],
     }
+
     redis = request.app["redis"]
-    await redis.hset("games_pending", game_id, json.dumps(game))
-    return web.json_response({"waiting_room_id": game_id})
+    await redis.hset("games_pending", game_id, json.dumps(pending_game))
+    return web.json_response({"redirect_url": f"/waiting-room/{game_id}"})
 
 
 @routes.post("/api/join-game")
@@ -92,15 +114,15 @@ async def join_game(request: web.Request) -> web.Response:
     game_id = data["game_id"]
     user = request["user"]
     redis = request.app["redis"]
-    game = json.loads(await redis.hget("games_pending", game_id))
+    pending_game = json.loads(await redis.hget("games_pending", game_id))
 
-    if user.id == game["host_id"]:
+    if str(user.id) == pending_game["host_id"]:
         return web.json_response({"msg": "you can't join your own game"}, status=400)
 
     await redis.hdel("games_pending", game_id)
 
     users_col = request.app["db"].users
-    host_user_doc = await users_col.find_one({"_id": ObjectId(game["host_id"])})
+    host_user_doc = await users_col.find_one({"_id": ObjectId(pending_game["host_id"])})
     host = User(**host_user_doc)
 
     players = [
@@ -113,16 +135,14 @@ async def join_game(request: web.Request) -> web.Response:
             "username": user.username,
         },
     ]
-    chars = ["X", "O"]
-    random.shuffle(players)
-    players[0]["char"] = chars.pop()
-    players[1]["char"] = chars.pop()
 
-    game_obj = TicTacToeGame(
-        _id=ObjectId(game_id), players=players, next_player=players[0]
+    game_class = GAME_TYPES[pending_game["game"]["codename"]]
+    game = game_class(_id=ObjectId(game_id))
+    game.start(players=players)
+    await request.app["db"].games.insert_one(game.db_dict())
+    await request.app["db"].users.update_many(
+        {"_id": {"$in": [host.id, user.id]}}, {"$inc": {"games_played": 1}}
     )
-    games_col = request.app["db"].games
-    await games_col.insert_one(game_obj.db_dict())
     await redis.publish(f"waiting_room:{game_id}", "game_ready")
 
     return web.json_response({"msg": "ok"})
@@ -150,3 +170,23 @@ async def game_room(request: web.Request) -> web.Response:
     return web.json_response(
         {"state": game.state, "next": game.next_player, "players": game.players}
     )
+
+
+@routes.get("/api/stats")
+async def stats(request: web.Request) -> web.Response:
+    games_col = request.app["db"].games
+    stats = {"total_games_played": await games_col.count_documents({})}
+
+    session = await get_session(request)
+    if user_id := session.get("user_id"):
+        users_col = request.app["db"].users
+        user_doc = await users_col.find_one({"_id": ObjectId(user_id)})
+        user = User(**user_doc)
+        stats.update(
+            {
+                "user_games_played": user.games_played,
+                "user_games_won": user.games_won,
+            }
+        )
+
+    return web.json_response(stats)

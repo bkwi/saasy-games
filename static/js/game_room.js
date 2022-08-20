@@ -22,23 +22,25 @@ const app = new Vue({
       board: [],
     },
     players: [],
-    next: ""
+    next: "",
+    winner: null
   },
 
   mounted: function () {
     this.gameId = window.location.pathname.split("/").slice(-1).pop();
-    this.ws = new WebSocket(`ws://localhost:8000/ws/game-room/${this.gameId}`);
+    this.ws = new WebSocket(`ws://${window.location.host}/ws/game-room/${this.gameId}`);
 
     this.ws.onmessage = (event) => {
-      console.log("NEW EVENT", event);
       const data = JSON.parse(event.data);
-      console.log("DATA", data)
       if (data.type === "update_state") {
         this.state = data.state;
         this.next= data.next;
         if (data.winner) {
-          alert(`Winner: ${data.winner.username}`)
-          window.location.replace("/");
+          this.winner = data.winner;
+          function redirect() {
+            window.location.replace("/");
+          };
+          setTimeout(redirect, 3000);
         }
       }
     };
