@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link href="/static/css/index.css" rel="stylesheet">
+  </head>
+
+  <body>
+
+    <div id="app">
+
+   	  <nav class="navbar" role="navigation" aria-label="main navigation">
+      	<div class="navbar-brand">
+          <div class="buttons">
+            <a href="/logout" v-if="user">
+              <button id="signin-button" class="button is-primary">Sign out</button>
+            </a>
+            <a href="/login" v-else>
+              <button id="signin-button" class="button is-primary">Sign in</button>
+            </a>
+          </div>
+        </div>
+      </nav>
+
+      <section class="sassy-stats">
+
+        <div class="container">
+
+          <div class="columns">
+            <div class="column is-4 is-offset-2">
+              Total games played: XXX
+            </div>
+            <div class="column is-4">
+              Games ongoing: XXX
+            </div>
+          </div>
+
+          <div class="columns" v-if="user">
+            <div class="column is-4 is-offset-2">
+              You played XXX games so far
+            </div>
+          </div>
+          <div class="columns" v-else>
+            <div class="column is-4 is-offset-2">
+              Sign in to see your stats!
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+
+      <section id="start-new-game" v-if="user">
+        <div class="container">
+          <div class="columns">
+            <div class="column is-6 is-offset-3 box">
+
+              Start a new game
+              <select v-model="gameTypeSelected">
+                <option v-for="game in gamesAvailable" :value="game.type">
+                  {{ game.name }}
+                </option>
+              </select>
+              and play against
+              <select v-model="opponentTypeSelected">
+                <option v-for="opponent in opponentsAvailable" :value="opponent.type">
+                  {{ opponent.name }}
+                </option>
+              </select>
+
+              <div class="buttons">
+                <button class="button is-primary" @click="startNewGame">Play!</button>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <section id="pending-games" v-if="user">
+        <div class="container">
+          <br/>
+          <br/>
+            <h2>Join Game</h2>
+          <br/>
+          <div class="columns">
+            <div class="column is-6 is-offset-3 box">
+              <table class="table">
+                <tr>
+                  <th>Host</th>
+                  <th>Game</th>
+                  <th></th>
+                </tr>
+                <tr v-for="game in visiblePendingGames">
+                  <td>{{ game.host_username }}</td>
+                  <td>{{ game.game_type }}</td>
+                  <td @click="joinGame(game.game_id)">JOIN</td>
+                </tr>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue-resource@1.5.1"></script>
+    <script src="/static/js/index.js"></script>
+
+  </body>
+</html>

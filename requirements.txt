@@ -1,0 +1,7 @@
+aiohttp==3.8.1
+aiohttp-session[secure]==2.11.0
+aiofiles==0.8.0
+motor==3.0.0
+aioredis==2.0.1
+pydantic==1.9.2
+aiohttp-devtools==1.0.post0

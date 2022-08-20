@@ -1,0 +1,8 @@
+.game tr {
+    height: 50px;
+    width: 50px;
+}
+
+.game td {
+    width: 50px;
+}

@@ -1,0 +1,31 @@
+version: '3.8'
+
+
+services:
+
+  games:
+    image: saasy-games
+    container_name: saasy-games
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 8000:8000
+    volumes:
+      - ./:/app
+    command: adev runserver games/main.py --app-factory create_app
+    # env_file:
+    #   - .env
+
+  mongo:
+    image: mongo:latest
+    container_name: sassy-mongo
+    ports:
+      - 27017:27017
+    volumes:
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+      - ./tmp/mongo.db:/data/db
+
+  redis:
+    image: redis:latest
+    container_name: sassy-redis

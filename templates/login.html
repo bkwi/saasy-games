@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+  </head>
+
+  <body>
+
+    <section class="hero is-fullheight">
+
+      <div id="app" class="hero-body">
+        <div class="container">
+          <div class="column is-4 is-offset-4">
+
+            <input class="input" type="text" placeholder="Username" v-model="username">
+            <input class="input" type="password" placeholder="Password" v-model="password">
+            <div class="control">
+              <button class="button is-primary" @click="login">Login</button>
+            </div>
+            <br>
+            <p>
+              <a href="/register">
+                Create new account
+              </a>
+            </p>
+
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue-resource@1.5.1"></script>
+    <script src="/static/js/login.js"></script>
+
+  </body>
+</html>
