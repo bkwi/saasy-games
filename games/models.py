@@ -30,6 +30,7 @@ class Game(BaseModel):
     display_name: str = ""
     state: dict = {}
     winner: dict = None
+    moves_history: list[dict] = []
 
     class Config:
         arbitrary_types_allowed = True
@@ -81,6 +82,9 @@ class TicTacToeGame(Game):
             return False
 
         self.state["board"][x][y] = self.next_player["char"]
+        if player_id != "cpu":
+            move["player_id"] = player_id
+            self.moves_history.append(move)
 
         for player in self.players:
             if player["id"] != player_id:

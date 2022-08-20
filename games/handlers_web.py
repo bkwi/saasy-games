@@ -1,6 +1,9 @@
 import aiofiles
 from aiohttp import web
 from aiohttp_session import get_session
+from bson import ObjectId
+
+from games.utils import login_required
 
 routes = web.RouteTableDef()
 
@@ -47,9 +50,9 @@ async def foo(request):
     #     # "waiting_room:cabd0f8336b14b868992df226aa5509a", "hello everyone"
     # )
     # await db.games.drop()
-    cur = db.users.find({})
-    async for u in cur:
-        print(u)
+    # cur = db.users.find({})
+    # async for u in cur:
+    #     print(u)
 
     # await db.users.update({})
     return web.Response(text="HEY")
@@ -63,7 +66,17 @@ async def waiting_room(request: web.Request) -> web.Response:
 
 
 @routes.get(r"/game-room/{game_id:\w+}")
+@login_required
 async def game_room(request: web.Request) -> web.Response:
+    game_id = request.match_info["game_id"]
+    projection = await request.app["db"].games.find_one(
+        {"_id": ObjectId(game_id)}, projection={"players": 1}
+    )
+    user = request["user"]
+    player_ids = [p["id"] for p in projection["players"]]
+    if str(user.id) not in player_ids:
+        raise web.HTTPNotFound()
+
     return web.Response(
         text=await read_html("game_room.html"), content_type="text/html"
     )
