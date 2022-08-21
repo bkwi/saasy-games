@@ -40,24 +40,6 @@ async def register(request: web.Request) -> web.Response:
     return web.Response(text=await read_html("register.html"), content_type="text/html")
 
 
-@routes.get("/fanout")
-async def foo(request):
-    # redis = request.app["redis"]
-    db = request.app["db"]
-    # await .publish(
-    #     "ttt",
-    #     "game_ready"
-    #     # "waiting_room:cabd0f8336b14b868992df226aa5509a", "hello everyone"
-    # )
-    # await db.games.drop()
-    # cur = db.users.find({})
-    # async for u in cur:
-    #     print(u)
-
-    # await db.users.update({})
-    return web.Response(text="HEY")
-
-
 @routes.get(r"/waiting-room/{room_id:\w+}")
 async def waiting_room(request: web.Request) -> web.Response:
     return web.Response(
@@ -84,7 +66,6 @@ async def game_room(request: web.Request) -> web.Response:
 
 @routes.get(r"/spectate/{game_id:\w+}")
 async def spectate(request: web.Request) -> web.Response:
-    game_id = request.match_info["game_id"]
     return web.Response(
         text=await read_html("game_room.html"), content_type="text/html"
     )

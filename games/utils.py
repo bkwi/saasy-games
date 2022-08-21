@@ -30,3 +30,14 @@ async def redis_subscription(websocket, redis, channel_name: str):
             await websocket.send_str(msg.get("data"))
     finally:
         await pubsub.unsubscribe(channel_name)
+
+
+async def cleanup(redis, keys_to_delete=None, messages_to_publish=None):
+    keys_to_delete = keys_to_delete or {}
+    messages_to_publish = messages_to_publish or {}
+
+    for set_name, key in keys_to_delete.items():
+        await redis.hdel(set_name, key)
+
+    for channel, msg in messages_to_publish.items():
+        await redis.publish(channel, msg)

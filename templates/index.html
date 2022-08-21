@@ -11,8 +11,8 @@
 
     <div id="app">
 
-   	  <nav class="navbar" role="navigation" aria-label="main navigation">
-      	<div class="navbar-brand">
+      <nav class="navbar" role="navigation" aria-label="main navigation">
+        <div class="navbar-brand">
           <div class="buttons">
             <a href="/logout" v-if="user">
               <button id="signin-button" class="button is-primary">Sign out</button>
@@ -30,7 +30,7 @@
           </br>
           Total games played: {{ gameStats.total_games_played }}
           </br>
-          Games ongoing: XXX
+          Games ongoing: {{ ongoingGames.length }}
 
           <p v-if="user">
             You played {{ gameStats.user_games_played }} games so far
@@ -70,8 +70,29 @@
           <p>
             Spectate Game
           </p>
+          <input type="text" placeholder="search by username" v-model="ongoingFilter"/>
+
+          <table class="table">
+            <tr>
+              <th>Game</th>
+              <th>Players</th>
+              <th></th>
+            </tr>
+
+            <tr v-for="game in visibleOngoingGames">
+              <td>{{ game.name }}</td>
+              <td> {{ game.players.join(', ') }}</td>
+              <td>
+                <button class="button is-small" @click="spectate(game.game_id)">Spectate</button>
+              </td>
+            </tr>
+          </table>
+
         </div>
       </section>
+
+      </br>
+      </br>
 
       <section id="pending-games" v-if="user">
         <div class="container">
@@ -82,18 +103,19 @@
 
           <table class="table">
             <tr>
-              <th>Host</th>
               <th>Game</th>
+              <th>Host</th>
               <th></th>
             </tr>
             <tr v-for="game in visiblePendingGames">
-              <td>{{ game.host_username }}</td>
               <td>{{ game.game.name }}</td>
+              <td>{{ game.host_username }}</td>
               <td>
                 <button class="button is-small" @click="joinGame(game.game_id)">Join</button>
               </td>
             </tr>
           </table>
+
         </div>
       </section>
 

@@ -119,13 +119,13 @@ class TicTacToeGame(Game):
 
         # check rows
         for row in board:
-            if len(set(row)) == 1:
+            if all(row) and len(set(row)) == 1:
                 return row[0]
 
         # check columns
         for col_idx in (0, 1, 2):
             col = [row[col_idx] for row in board]
-            if len(set(col)) == 1:
+            if all(col) and len(set(col)) == 1:
                 return col[0]
 
         # check diagonals
@@ -134,7 +134,7 @@ class TicTacToeGame(Game):
             [board[2][0], board[1][1], board[0][2]],
         ]
         for diag in diagonals:
-            if len(set(diag)) == 1:
+            if all(diag) and len(set(diag)) == 1:
                 return diag[0]
 
         return None

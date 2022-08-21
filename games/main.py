@@ -52,8 +52,6 @@ async def create_app() -> web.Application:
     app.middlewares.extend([session_middleware])
     app.cleanup_ctx.extend([setup_app_redis, setup_db])
 
-    app["websockets"] = defaultdict(set)
-
     app.add_routes(web_routes)
     app.add_routes(api_routes)
     app.add_routes(ws_routes)

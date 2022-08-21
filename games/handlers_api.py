@@ -7,7 +7,7 @@ from aiohttp import web
 from aiohttp_session import get_session, new_session
 from bson import ObjectId
 
-from games.models import GAME_TYPES, TicTacToeGame, User
+from games.models import GAME_TYPES, User
 from games.utils import login_required
 
 routes = web.RouteTableDef()
@@ -92,6 +92,16 @@ async def create_new_game(request: web.Request) -> web.Response:
         await games_col.insert_one(game.db_dict())
         users_col = request.app["db"].users
         await users_col.update_one({"_id": user.id}, {"$inc": {"games_played": 1}})
+        game_data = {
+            "game_id": game_id,
+            "name": game.display_name,
+            "players": [p["username"] for p in game.players],
+        }
+        await request.app["redis"].hset("games_ongoing", game_id, json.dumps(game_data))
+        await request.app["redis"].publish(
+            "main_room",
+            json.dumps({"type": "games_added", "ongoing_games": [game_data]}),
+        )
         return web.json_response({"redirect_url": f"/game-room/{game_id}"})
 
     pending_game = {
@@ -104,6 +114,10 @@ async def create_new_game(request: web.Request) -> web.Response:
 
     redis = request.app["redis"]
     await redis.hset("games_pending", game_id, json.dumps(pending_game))
+    await redis.publish(
+        "main_room",
+        json.dumps({"type": "games_added", "pending_games": [pending_game]}),
+    )
     return web.json_response({"redirect_url": f"/waiting-room/{game_id}"})
 
 
@@ -143,7 +157,17 @@ async def join_game(request: web.Request) -> web.Response:
     await request.app["db"].users.update_many(
         {"_id": {"$in": [host.id, user.id]}}, {"$inc": {"games_played": 1}}
     )
+    game_data = {
+        "game_id": game_id,
+        "name": game.display_name,
+        "players": [p["username"] for p in game.players],
+    }
+    await request.app["redis"].hset("games_ongoing", game_id, json.dumps(game_data))
     await redis.publish(f"waiting_room:{game_id}", "game_ready")
+    await redis.publish(
+        "main_room",
+        json.dumps({"type": "games_added", "ongoing_games": [game_data]}),
+    )
 
     return web.json_response({"msg": "ok"})
 
@@ -158,6 +182,15 @@ async def pending_games(request: web.Request) -> web.Response:
     return web.json_response({"games": games})
 
 
+@routes.get("/api/ongoing-games")
+async def ongoing_games(request: web.Request) -> web.Response:
+    redis = request.app["redis"]
+    games = [
+        json.loads(game) for _, game in (await redis.hgetall("games_ongoing")).items()
+    ]
+    return web.json_response({"games": games})
+
+
 @routes.get(r"/api/game-room/{game_id:\w+}")
 async def game_room(request: web.Request) -> web.Response:
     game_id = request.match_info["game_id"]
@@ -166,7 +199,8 @@ async def game_room(request: web.Request) -> web.Response:
     if not game_doc:
         return web.json_response({"msg": "game not found"}, status=404)
 
-    game = TicTacToeGame(**game_doc)
+    game_class = GAME_TYPES[game_doc["code_name"]]
+    game = game_class(**game_doc)
     return web.json_response(
         {"state": game.state, "next": game.next_player, "players": game.players}
     )
@@ -200,6 +234,13 @@ async def make_move(request: web.Request) -> web.Response:
         if game.winner and game.winner["id"] != "cpu":
             await request.app["db"].users.update_one(
                 {"_id": ObjectId(game.winner["id"])}, {"$inc": {"games_won": 1}}
+            )
+
+        if game.finished:
+            await request.app["redis"].hdel("games_ongoing", game_id)
+            await request.app["redis"].publish(
+                "main_room",
+                json.dumps({"type": "games_removed", "ongoing_games": [game_id]}),
             )
 
         msg = {

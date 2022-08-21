@@ -17,6 +17,11 @@
 
           <div class="column is-4 is-offset-4">
 
+            <div v-if="spectator" class="notification">
+              SPECTATOR MODE
+            </div>
+
+
             <div v-if="finished">
               <div v-if="winner">
                 Winner: {{ winner.username }}. You'll be redirected in a moment.
