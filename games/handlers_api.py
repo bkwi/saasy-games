@@ -172,6 +172,48 @@ async def game_room(request: web.Request) -> web.Response:
     )
 
 
+@routes.post("/api/game/move")
+@login_required
+async def make_move(request: web.Request) -> web.Response:
+    data = await request.json()
+    game_id = data["game_id"]
+    user = request["user"]
+    game_doc = await request.app["db"].games.find_one({"_id": ObjectId(game_id)})
+    game = GAME_TYPES[game_doc["code_name"]](**game_doc)
+
+    if str(user.id) not in [player["id"] for player in game.players]:
+        return web.json_response(
+            {"msg": "you're not taking part in this game"}, status=403
+        )
+
+    if game.apply_move(str(user.id), data["move"]):
+        await request.app["db"].games.update_one(
+            {"_id": game.id},
+            {
+                "$set": {
+                    "state": game.state,
+                    "next_player": game.next_player,
+                    "winner": game.winner,
+                }
+            },
+        )
+        if game.winner and game.winner["id"] != "cpu":
+            await request.app["db"].users.update_one(
+                {"_id": ObjectId(game.winner["id"])}, {"$inc": {"games_won": 1}}
+            )
+
+        msg = {
+            "type": "update_state",
+            "state": game.state,
+            "next": game.next_player,
+            "winner": game.winner,
+            "finished": game.finished,
+        }
+        await request.app["redis"].publish(f"game_room:{game_id}", json.dumps(msg))
+
+    return web.json_response({})
+
+
 @routes.get("/api/stats")
 async def stats(request: web.Request) -> web.Response:
     games_col = request.app["db"].games

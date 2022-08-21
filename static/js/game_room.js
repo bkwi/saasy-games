@@ -25,14 +25,13 @@ const app = new Vue({
     next: "",
     winner: null,
     spectator: window.location.pathname.startsWith("/spectate"),
+    finished: false,
   },
 
   mounted: function () {
     this.gameId = window.location.pathname.split("/").slice(-1).pop();
+
     let websocketUrl = `ws://${window.location.host}/ws/game-room/${this.gameId}`;
-    if (this.spectator) {
-     websocketUrl = `ws://${window.location.host}/ws/spectate/${this.gameId}`;
-    };
 
     this.ws = new WebSocket(websocketUrl);
     this.ws.onmessage = (event) => {
@@ -40,8 +39,10 @@ const app = new Vue({
       if (data.type === "update_state") {
         this.state = data.state;
         this.next= data.next;
-        if (data.winner) {
-          this.winner = data.winner;
+        this.winner = data.winner;
+        this.finished = data.finished;
+
+        if (this.finished) {
           function redirect() {
             window.location.replace("/");
           };
@@ -67,13 +68,14 @@ const app = new Vue({
 
   methods: {
     move: function (event) {
-      if (this.spectator) return;
+      if (this.spectator || this.finished) return;
 
-      let data = {
+      const data = {
         user: this.user,
+        game_id: this.gameId,
         move: event
       };
-      this.ws.send(JSON.stringify(data));
+      this.$http.post("/api/game/move", data);
     }
   },
 

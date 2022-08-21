@@ -13,11 +13,22 @@
 
       <div id="app" class="hero-body">
         <div class="container">
-          <div v-if="winner" class="column is-4 is-offset-4">
-            Winner: {{ winner.username }}. You'll be redirected in a moment.
-          </div>
-          <div v-else class="column is-4 is-offset-4">
-            Next move: {{ next.username }}
+
+
+          <div class="column is-4 is-offset-4">
+
+            <div v-if="finished">
+              <div v-if="winner">
+                Winner: {{ winner.username }}. You'll be redirected in a moment.
+              </div>
+              <div v-else>
+                Game ended in a draw. You'll be redirected in a moment.
+              </div>
+            </div>
+            <div v-else>
+              Next move: {{ next.username }}
+            </div>
+
             <tictactoe v-bind:state="state" v-on:cell-clicked="move"></tictactoe>
           </div>
         </div>
@@ -25,8 +36,6 @@
     </section>
 
     <template id="tictactoe">
-      <div>
-
       <table class="table is-bordered game">
         <tr v-for="(row, row_idx) in this.state.board">
           <td v-for="(cell, cell_idx) in row" @click="cellClicked(row_idx, cell_idx)">
@@ -34,9 +43,6 @@
           </td>
         </tr>
       </table>
-
-      </div>
-
     </template>
 
     <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>

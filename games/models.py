@@ -31,6 +31,7 @@ class Game(BaseModel):
     state: dict = {}
     winner: dict = None
     moves_history: list[dict] = []
+    finished: bool = False
 
     class Config:
         arbitrary_types_allowed = True
@@ -91,14 +92,26 @@ class TicTacToeGame(Game):
                 self.next_player = player
 
         if winning_char := self.check_winner():
+            self.finished = True
             for player in self.players:
                 if winning_char == player["char"]:
                     self.winner = player
                     return True
 
+        if self.check_draw():
+            self.finished = True
+            return True
+
         if self.next_player["id"] == "cpu":
             return self.make_cpu_move()
 
+        return True
+
+    def check_draw(self):
+        for row in self.state["board"]:
+            for cell in row:
+                if cell == "":
+                    return False
         return True
 
     def check_winner(self):
