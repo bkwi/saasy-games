@@ -14,9 +14,7 @@ services:
     volumes:
       - ./:/app
     command: adev runserver games/main.py --app-factory create_app
-        # command: python games/main.py
-    # env_file:
-    #   - .env
+    # command: python games/main.py
 
   mongo:
     image: mongo:latest

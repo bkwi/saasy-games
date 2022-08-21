@@ -17,7 +17,7 @@ const app = new Vue({
         return
       };
       this.$http.post("/api/register", body).then(response => {
-        window.location.replace("/");
+        window.location.replace("/login");
       }, response => {
         alert("Registration failed");
       })

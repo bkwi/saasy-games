@@ -88,10 +88,10 @@ async def create_new_game(request: web.Request) -> web.Response:
                 },
             ]
         )
-        games_col = request.app["db"].games
-        await games_col.insert_one(game.db_dict())
-        users_col = request.app["db"].users
-        await users_col.update_one({"_id": user.id}, {"$inc": {"games_played": 1}})
+        await request.app["db"].games.insert_one(game.db_dict())
+        await request.app["db"].users.update_one(
+            {"_id": user.id}, {"$inc": {"games_played": 1}}
+        )
         game_data = {
             "game_id": game_id,
             "name": game.display_name,

@@ -37,6 +37,12 @@ class Game(BaseModel):
         arbitrary_types_allowed = True
 
     def start(self, players: list):
+        """
+        Initialize game with players list and setup initial game state here.
+        """
+        raise NotImplementedError
+
+    def apply_move(self, player_id: str, move: dict):
         raise NotImplementedError
 
 
@@ -74,7 +80,7 @@ class TicTacToeGame(Game):
         move = random.choice(available_cells)
         return self.apply_move("cpu", move)
 
-    def apply_move(self, player_id, move):
+    def apply_move(self, player_id: str, move: dict):
         if self.next_player["id"] != player_id:
             return False
 

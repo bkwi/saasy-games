@@ -9,6 +9,9 @@ routes = web.RouteTableDef()
 
 @routes.get("/ws/main")
 async def open_ws(request):
+    """
+    Websocket connection used to update the home page with available games.
+    """
     ws = web.WebSocketResponse()
     await ws.prepare(request)
 
@@ -17,8 +20,7 @@ async def open_ws(request):
     )
 
     try:
-        async for msg in ws:
-            await ws.send_str(msg.data)
+        await ws.receive()
     finally:
         task.cancel()
 
@@ -28,6 +30,10 @@ async def open_ws(request):
 @routes.get(r"/ws/waiting-room/{game_id:\w+}")
 @login_required
 async def waiting_room(request: web.Request) -> web.WebSocketResponse:
+    """
+    Websocket connection used to notify a waiting players
+    that they can be redirected to the game screen
+    """
     game_id = request.match_info["game_id"]
     ws = web.WebSocketResponse(heartbeat=1.0)
     await ws.prepare(request)
@@ -57,6 +63,10 @@ async def waiting_room(request: web.Request) -> web.WebSocketResponse:
 
 @routes.get(r"/ws/game-room/{game_id:\w+}")
 async def game_room(request: web.Request) -> web.WebSocketResponse:
+    """
+    Websocket connection used to update the game state
+    (display current "board" and player's moves)
+    """
     game_id = request.match_info["game_id"]
     ws = web.WebSocketResponse()
     await ws.prepare(request)
@@ -66,8 +76,7 @@ async def game_room(request: web.Request) -> web.WebSocketResponse:
     )
 
     try:
-        async for msg in ws:
-            pass
+        await ws.receive()
     finally:
         task.cancel()
 

@@ -6,6 +6,11 @@ from games.models import User
 
 
 def login_required(func):
+    """
+    Check if user is signed in.
+    If yes, get user from DB and update the request object.
+    """
+
     async def wrapper(request: web.Request):
         session = await get_session(request)
         if session.get("authorized"):
@@ -22,6 +27,9 @@ def login_required(func):
 
 
 async def redis_subscription(websocket, redis, channel_name: str):
+    """
+    Create a subscription for each websocket connection.
+    """
     pubsub = redis.pubsub(ignore_subscribe_messages=True)
 
     try:
@@ -33,6 +41,10 @@ async def redis_subscription(websocket, redis, channel_name: str):
 
 
 async def cleanup(redis, keys_to_delete=None, messages_to_publish=None):
+    """
+    Cleanup pending game data when player joins (or game is cancelled).
+    Puglish messages to update home screen.
+    """
     keys_to_delete = keys_to_delete or {}
     messages_to_publish = messages_to_publish or {}
 
