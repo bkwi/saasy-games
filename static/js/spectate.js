@@ -17,24 +17,18 @@ const app = new Vue({
   data: {
     ws: null,
     gameId: null,
-    user: null,
     state: {
       board: [],
     },
     players: [],
     next: "",
-    winner: null,
-    spectator: window.location.pathname.startsWith("/spectate"),
+    winner: null
   },
 
   mounted: function () {
     this.gameId = window.location.pathname.split("/").slice(-1).pop();
-    let websocketUrl = `ws://${window.location.host}/ws/game-room/${this.gameId}`;
-    if (this.spectator) {
-     websocketUrl = `ws://${window.location.host}/ws/spectate/${this.gameId}`;
-    };
+    this.ws = new WebSocket(`ws://${window.location.host}/ws/game-room/${this.gameId}`);
 
-    this.ws = new WebSocket(websocketUrl);
     this.ws.onmessage = (event) => {
       const data = JSON.parse(event.data);
       if (data.type === "update_state") {
@@ -50,31 +44,12 @@ const app = new Vue({
       }
     };
 
-
     this.$http.get(`/api/game-room/${this.gameId}`).then(response => {
       this.state = response.body.state;
       this.next = response.body.next;
     }, response => {
-      alert("Game not found");
-    });
-
-    this.$http.get("/api/user").then(response => {
-      this.user = response.body.user;
-    }, response => {
       // err
-    })
-  },
-
-  methods: {
-    move: function (event) {
-      if (this.spectator) return;
-
-      let data = {
-        user: this.user,
-        move: event
-      };
-      this.ws.send(JSON.stringify(data));
-    }
+    });
   },
 
 });

@@ -80,3 +80,11 @@ async def game_room(request: web.Request) -> web.Response:
     return web.Response(
         text=await read_html("game_room.html"), content_type="text/html"
     )
+
+
+@routes.get(r"/spectate/{game_id:\w+}")
+async def spectate(request: web.Request) -> web.Response:
+    game_id = request.match_info["game_id"]
+    return web.Response(
+        text=await read_html("game_room.html"), content_type="text/html"
+    )

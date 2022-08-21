@@ -15,13 +15,16 @@ const app = new Vue({
     ],
     opponentSelected: {name: "another human", type: "human"},
     ws: null,
+    pendingFilter: "",
     pendingGames: [],
     gameStats: {}
   },
 
   computed: {
     visiblePendingGames: function () {
-      return this.pendingGames.filter(game => game.host_username !== this.user.username);
+      return this.pendingGames
+        .filter(game => game.host_username !== this.user.username)
+        .filter(game => game.host_username.includes(this.pendingFilter));
     },
   },
 

@@ -27,84 +27,73 @@
       <section class="sassy-stats">
 
         <div class="container">
+          </br>
+          Total games played: {{ gameStats.total_games_played }}
+          </br>
+          Games ongoing: XXX
 
-          <div class="columns">
-            <div class="column is-4 is-offset-2">
-              Total games played: {{ gameStats.total_games_played }}
-            </div>
-            <div class="column is-4">
-              Games ongoing: XXX
-            </div>
-          </div>
-
-          <div class="columns" v-if="user">
-            <div class="column is-4 is-offset-2">
-              You played {{ gameStats.user_games_played }} games so far
-            </div>
-            <div class="column is-4">
-              You won {{ gameStats.user_games_won }} games so far
-            </div>
-          </div>
-          <div class="columns" v-else>
-            <div class="column is-4 is-offset-2">
-              Sign in to see your stats!
-            </div>
-          </div>
-
+          <p v-if="user">
+            You played {{ gameStats.user_games_played }} games so far
+            </br>
+            You won {{ gameStats.user_games_won }} games so far
+          </p>
+          <p v-else>
+            Sign in to see your stats!
+          </p>
         </div>
 
       </section>
 
+      </br>
+      </br>
+
       <section id="start-new-game" v-if="user">
         <div class="container">
-          <div class="columns">
-            <div class="column is-6 is-offset-3 box">
+          Start a new game
+          <select v-model="gameSelected.codename">
+            <option v-for="game in gamesAvailable" :value="game.codename">
+              {{ game.name }}
+            </option>
+          </select>
+          and play against
+          <select v-model="opponentSelected.type">
+            <option v-for="opponent in opponentsAvailable" :value="opponent.type">
+              {{ opponent.name }}
+            </option>
+          </select>
+          <button class="button is-primary" @click="startNewGame">Start!</button>
+        </div>
+      </section>
 
-              Start a new game
-              <select v-model="gameSelected.codename">
-                <option v-for="game in gamesAvailable" :value="game.codename">
-                  {{ game.name }}
-                </option>
-              </select>
-              and play against
-              <select v-model="opponentSelected.type">
-                <option v-for="opponent in opponentsAvailable" :value="opponent.type">
-                  {{ opponent.name }}
-                </option>
-              </select>
-
-              <div class="buttons">
-                <button class="button is-primary" @click="startNewGame">Play!</button>
-              </div>
-
-            </div>
-          </div>
-
+      <section id="spectate-games">
+        <div class="container">
+          <p>
+            Spectate Game
+          </p>
         </div>
       </section>
 
       <section id="pending-games" v-if="user">
         <div class="container">
-          <br/>
-          <br/>
-            <h2>Join Game</h2>
-          <br/>
-          <div class="columns">
-            <div class="column is-6 is-offset-3 box">
-              <table class="table">
-                <tr>
-                  <th>Host</th>
-                  <th>Game</th>
-                  <th></th>
-                </tr>
-                <tr v-for="game in visiblePendingGames">
-                  <td>{{ game.host_username }}</td>
-                  <td>{{ game.game.name }}</td>
-                  <td @click="joinGame(game.game_id)">JOIN</td>
-                </tr>
-              </table>
-            </div>
-          </div>
+          <p>
+            Join Game
+          </p>
+          <input type="text" placeholder="search by username" v-model="pendingFilter"/>
+
+          <table class="table">
+            <tr>
+              <th>Host</th>
+              <th>Game</th>
+              <th></th>
+            </tr>
+            <tr v-for="game in visiblePendingGames">
+              <td>{{ game.host_username }}</td>
+              <td>{{ game.game.name }}</td>
+              <td>
+                <button class="button is-small" @click="joinGame(game.game_id)">Join</button>
+              </td>
+            </tr>
+          </table>
         </div>
       </section>
 

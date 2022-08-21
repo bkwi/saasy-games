@@ -95,3 +95,23 @@ async def game_room(request: web.Request) -> web.WebSocketResponse:
         task.cancel()
 
     return ws
+
+
+@routes.get(r"/ws/spectate/{game_id:\w+}")
+async def spectate(request: web.Request) -> web.WebSocketResponse:
+    game_id = request.match_info["game_id"]
+    redis = request.app["redis"]
+    ws = web.WebSocketResponse()
+    await ws.prepare(request)
+
+    task = request.app.loop.create_task(
+        redis_subscription(ws, redis, f"game_room:{game_id}")
+    )
+
+    try:
+        async for msg in ws:
+            pass
+    finally:
+        task.cancel()
+
+    return ws
