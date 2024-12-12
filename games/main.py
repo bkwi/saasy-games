@@ -1,6 +1,5 @@
 import base64
 import uuid
-from collections import defaultdict
 from typing import Awaitable
 
 import aiohttp_session
@@ -38,7 +37,6 @@ async def setup_db(app: web.Application):
 
 
 async def create_app() -> web.Application:
-
     app = web.Application()
 
     aiohttp_session.setup(
