@@ -1,6 +1,5 @@
 import base64
 import uuid
-from collections import defaultdict
 from typing import Awaitable
 
 import aiohttp_session
