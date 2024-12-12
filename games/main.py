@@ -37,7 +37,6 @@ async def setup_db(app: web.Application):
 
 
 async def create_app() -> web.Application:
-
     app = web.Application()
 
     aiohttp_session.setup(
